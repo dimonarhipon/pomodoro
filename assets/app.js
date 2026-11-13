@@ -1,67 +1,604 @@
-(function(){const r=document.createElement("link").relList;if(r&&r.supports&&r.supports("modulepreload"))return;for(const o of document.querySelectorAll('link[rel="modulepreload"]'))i(o);new MutationObserver(o=>{for(const s of o)if(s.type==="childList")for(const l of s.addedNodes)l.tagName==="LINK"&&l.rel==="modulepreload"&&i(l)}).observe(document,{childList:!0,subtree:!0});function n(o){const s={};return o.integrity&&(s.integrity=o.integrity),o.referrerPolicy&&(o.referrerPolicy=o.referrerPolicy),o.crossOrigin==="use-credentials"?s.credentials="include":o.crossOrigin==="anonymous"?s.credentials="omit":s.credentials="same-origin",s}function i(o){if(o.ep)return;o.ep=!0;const s=n(o);fetch(o.href,s)}})();const d={get(e,r){try{const n=localStorage.getItem(e);return n?JSON.parse(n):r}catch{return r}},set(e,r){try{localStorage.setItem(e,JSON.stringify(r))}catch(n){console.error("Ошибка сохранения:",n)}}},b={focus:25,shortBreak:5,longBreak:15},t={mode:"focus",timeLeft:b.focus*60,isRunning:!1,completedPomodoros:0,settings:{...b},sessions:[],intervalId:null};function w(e){const r=Math.floor(e/60),n=e%60;return`${String(r).padStart(2,"0")}:${String(n).padStart(2,"0")}`}function y(){return new Date().toDateString()}function L(e){return{focus:"Фокусировка",shortBreak:"Короткий перерыв",longBreak:"Длительный перерыв"}[e]||e}function T(e){return{focus:"🎯",shortBreak:"☕",longBreak:"🌴"}[e]||"⏱️"}function k(e){const r={focus:"from-red-500 to-orange-500",shortBreak:"from-green-400 to-emerald-500",longBreak:"from-blue-400 to-indigo-500"};return r[e]||r.focus}function S(e){const r={focus:"border-red-500/30",shortBreak:"border-green-500/30",longBreak:"border-blue-500/30"};return r[e]||r.focus}function N(e){const r={focus:"ring-red-500/30",shortBreak:"ring-green-500/30",longBreak:"ring-blue-500/30"};return r[e]||r.focus}function $(e){try{const r=window.AudioContext||window.webkitAudioContext;if(!r)return;const n=new r,i=n.createOscillator(),o=n.createGain();i.connect(o),o.connect(n.destination),i.frequency.value=e==="focus"?800:600,i.type="sine",o.gain.setValueAtTime(.3,n.currentTime),o.gain.exponentialRampToValueAtTime(.01,n.currentTime+.5),i.start(n.currentTime),i.stop(n.currentTime+.5)}catch{}}function j(){const e=d.get("pomodoro-last-date",""),r=y();e!==r?(t.completedPomodoros=0,d.set("pomodoro-last-date",r)):t.completedPomodoros=d.get("pomodoro-completed",0),t.settings=d.get("pomodoro-settings",{...b}),t.sessions=d.get("pomodoro-sessions",[]),t.timeLeft=t.settings[t.mode]*60}function C(){d.set("pomodoro-settings",t.settings),d.set("pomodoro-sessions",t.sessions),d.set("pomodoro-completed",t.completedPomodoros),d.set("pomodoro-last-date",y())}function I(){t.isRunning||(t.isRunning=!0,t.intervalId=setInterval(()=>{t.timeLeft>0?(t.timeLeft--,E(),v()):A()},1e3),B())}function h(){t.isRunning=!1,t.intervalId&&(clearInterval(t.intervalId),t.intervalId=null),B()}function D(){h(),t.timeLeft=t.settings[t.mode]*60,E(),v()}function g(e){h(),t.mode=e,t.timeLeft=t.settings[e]*60,M()}function A(){h(),$(t.mode);const e={id:Date.now().toString(),mode:t.mode,duration:t.settings[t.mode],completedAt:new Date().toISOString()};t.sessions.push(e),t.mode==="focus"&&t.completedPomodoros++,C(),t.mode==="focus"?t.completedPomodoros%4===0?g("longBreak"):g("shortBreak"):g("focus")}function v(){const e=w(t.timeLeft),r=T(t.mode);document.title=`${r} ${e} — Pomodoro`}let c=null;function M(){if(!c)return;c.innerHTML="";const e=document.createElement("div");e.className="absolute top-0 left-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2",c.appendChild(e);const r=document.createElement("div");r.className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2",c.appendChild(r);const n=document.createElement("div");n.className="relative z-10 flex flex-col items-center justify-center w-full max-w-lg mx-auto px-4 py-8";const i=document.createElement("div");i.className="text-center mb-8",i.innerHTML=`
-    <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
-      <span class="bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">Pomodoro</span> Таймер
-    </h1>
-    <p class="text-gray-400 text-sm">Сфокусируйся. Работай. Отдыхай.</p>
-  `,n.appendChild(i);const o=document.createElement("div");o.className="flex flex-col items-center gap-8 mb-8",o.id="timer-section",n.appendChild(o);const s=document.createElement("div");s.className="w-full mb-6",s.id="stats-section",n.appendChild(s);const l=document.createElement("div");l.className="text-center text-xs text-gray-500 mt-4",l.textContent="Каждые 4 помодоро — длительный перерыв",n.appendChild(l),c.appendChild(n);const m=R();c.appendChild(m),P(o),H(o),B(),O(),v()}function P(e){const r=e.querySelector("#mode-tabs");r&&r.remove();const n=document.createElement("div");n.id="mode-tabs",n.className="flex gap-2 bg-white/10 backdrop-blur-sm rounded-full p-1.5",["focus","shortBreak","longBreak"].forEach(o=>{const s=document.createElement("button"),l=t.mode===o;s.className=`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${l?`bg-gradient-to-r ${k(o)} text-white shadow-lg`:"text-gray-300 hover:text-white hover:bg-white/10"}`,s.textContent=L(o),s.addEventListener("click",()=>g(o)),n.appendChild(s)}),e.insertBefore(n,e.firstChild)}function H(e){const r=e.querySelector("#timer-display");r&&r.remove();const n=document.createElement("div");n.id="timer-display",n.className="relative";const i=document.createElement("div");i.className=`absolute inset-0 bg-gradient-to-r ${k(t.mode)} rounded-full blur-3xl opacity-20 scale-110 animate-pulse`,n.appendChild(i);const o=document.createElement("div");o.className=`relative w-72 h-72 md:w-80 md:h-80 rounded-full border-4 ${S(t.mode)} ring-8 ${N(t.mode)} flex items-center justify-center bg-gray-900/50 backdrop-blur-sm`;const s=document.createElement("div");s.className="text-center",s.innerHTML=`
-    <div class="text-6xl md:text-7xl font-mono font-bold text-white tracking-wider" id="timer-time">${w(t.timeLeft)}</div>
-    <div class="text-sm text-gray-400 mt-2 uppercase tracking-widest">${L(t.mode)}</div>
-  `,o.appendChild(s),n.appendChild(o),e.appendChild(n)}function E(){const e=document.getElementById("timer-time");e&&(e.textContent=w(t.timeLeft))}function B(){const e=document.getElementById("timer-section");if(!e)return;const r=e.querySelector("#controls");r&&r.remove();const n=document.createElement("div");n.id="controls",n.className="flex gap-4";const i=document.createElement("button");i.className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300 hover:scale-105",i.title="Сброс",i.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>',i.addEventListener("click",D),n.appendChild(i);const o=document.createElement("button");o.className=`w-16 h-16 rounded-full bg-gradient-to-r ${k(t.mode)} flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105`,o.title=t.isRunning?"Пауза":"Старт",t.isRunning?o.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 9v6m4-6v6"/></svg>':o.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',o.addEventListener("click",()=>{t.isRunning?h():I()}),n.appendChild(o);const s=document.createElement("button");s.className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300 hover:scale-105",s.title="Пропустить",s.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 5l7 7-7 7"/></svg>',s.addEventListener("click",()=>{t.mode==="focus"?g(t.completedPomodoros>0&&t.completedPomodoros%4===0?"longBreak":"shortBreak"):g("focus")}),n.appendChild(s),e.appendChild(n)}function O(){const e=document.getElementById("stats-section");if(!e)return;const r=y(),n=t.sessions.filter(a=>new Date(a.completedAt).toDateString()===r),i=n.filter(a=>a.mode==="focus"),o=i.reduce((a,p)=>a+p.duration,0),s=n.filter(a=>a.mode!=="focus").reduce((a,p)=>a+p.duration,0),l=Math.floor(o/60),m=o%60,f=l>0?`${l}ч ${m}м`:`${m}м`;let u=`
-    <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-      <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
-        Статистика за сегодня
-      </h3>
-      <div class="grid grid-cols-3 gap-4">
-        <div class="text-center p-3 bg-white/5 rounded-xl">
-          <div class="text-2xl font-bold text-red-400">${t.completedPomodoros}</div>
-          <div class="text-xs text-gray-400 mt-1">Помодоро</div>
-        </div>
-        <div class="text-center p-3 bg-white/5 rounded-xl">
-          <div class="text-2xl font-bold text-orange-400">${o>0?f:"0м"}</div>
-          <div class="text-xs text-gray-400 mt-1">Фокус</div>
-        </div>
-        <div class="text-center p-3 bg-white/5 rounded-xl">
-          <div class="text-2xl font-bold text-green-400">${s}м</div>
-          <div class="text-xs text-gray-400 mt-1">Отдых</div>
-        </div>
-      </div>`;if(i.length>0){const a=Math.min(100,i.length/8*100);u+=`
-      <div class="mt-4">
-        <div class="flex justify-between text-xs text-gray-400 mb-2">
-          <span>Прогресс дня</span>
-          <span>${i.length} / 8 помодоро</span>
-        </div>
-        <div class="h-2 bg-gray-700/50 rounded-full overflow-hidden">
-          <div class="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full transition-all duration-500" style="width: ${a}%"></div>
-        </div>
-      </div>`}i.length>0&&(u+=`
-      <div class="mt-4 pt-4 border-t border-white/5">
-        <div class="text-xs text-gray-400 mb-2">Последние сессии</div>
-        <div class="flex gap-1.5 flex-wrap">`,i.slice(-8).forEach(a=>{const p=new Date(a.completedAt).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});u+=`<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/20 flex items-center justify-center text-xs text-red-300" title="${a.duration} мин — ${p}">🍅</div>`}),u+="</div></div>"),u+="</div>",e.innerHTML=u}function R(){const e=document.createElement("button");return e.className="fixed bottom-6 right-6 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300 hover:scale-110 shadow-lg z-50",e.title="Настройки",e.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',e.addEventListener("click",z),e}function z(){const e=document.createElement("div");e.className="fixed inset-0 z-50 flex items-center justify-center p-4",e.id="settings-overlay";const r=document.createElement("div");r.className="absolute inset-0 bg-black/60 backdrop-blur-sm",r.addEventListener("click",x),e.appendChild(r);const n=document.createElement("div");n.className="relative bg-gray-800/95 backdrop-blur-xl border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl";const i=[{key:"focus",label:"Фокусировка",icon:"🎯"},{key:"shortBreak",label:"Короткий перерыв",icon:"☕"},{key:"longBreak",label:"Длительный перерыв",icon:"🌴"}];let o=`
-    <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
-      </svg>
-      Настройки
-    </h2>
-    <div class="space-y-4">
-  `;i.forEach(s=>{o+=`
-      <div class="flex items-center justify-between gap-4">
-        <label class="text-gray-300 flex items-center gap-2">
-          <span>${s.icon}</span>
-          <span class="text-sm">${s.label}</span>
-        </label>
-        <div class="flex items-center gap-2">
-          <input type="number" min="1" max="120" value="${t.settings[s.key]}" data-mode="${s.key}" class="settings-input w-20 px-3 py-2 bg-gray-700/50 border border-white/10 rounded-lg text-white text-center text-sm focus:outline-none focus:ring-2 focus:ring-white/20"/>
-          <span class="text-gray-400 text-sm">мин</span>
-        </div>
-      </div>
-    `}),o+=`
-    </div>
-    <div class="flex gap-3 mt-8">
-      <button id="settings-cancel" class="flex-1 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-gray-300 text-sm font-medium hover:bg-white/10 transition-all">Отмена</button>
-      <button id="settings-save" class="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-medium hover:shadow-lg transition-all">Сохранить</button>
-    </div>
-  `,n.innerHTML=o,e.appendChild(n),document.body.appendChild(e),document.getElementById("settings-cancel").addEventListener("click",x),document.getElementById("settings-save").addEventListener("click",()=>{document.querySelectorAll(".settings-input").forEach(l=>{const m=l.dataset.mode;let f=parseInt(l.value)||1;f=Math.max(1,Math.min(120,f)),t.settings[m]=f}),C(),x(),t.isRunning||(t.timeLeft=t.settings[t.mode]*60),E(),v()})}function x(){const e=document.getElementById("settings-overlay");e&&e.remove()}const q={init(e){c=e,c.className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col items-center justify-center p-4 relative overflow-hidden",j(),M()}};document.addEventListener("DOMContentLoaded",()=>{const e=document.getElementById("app");e&&q.init(e)});
+// ============================================================
+// Pomodoro: таймер по timestamp + история по дням в localStorage
+// Без зависимостей.
+// ============================================================
+
+const STORE_KEY = 'pomodoro.state.v3';
+const MIN = 60000;
+const KEEP_DAYS = 365;
+
+const MODES = {
+  focus:      { label: 'Фокусировка',        short: 'Фокус',   emoji: '🎯' },
+  shortBreak: { label: 'Короткий перерыв',   short: 'Перерыв', emoji: '☕' },
+  longBreak:  { label: 'Длительный перерыв', short: 'Отдых',   emoji: '🌴' },
+};
+
+const DEFAULTS = {
+  focus: 25, shortBreak: 5, longBreak: 15,
+  longEvery: 4, goal: 8, autoStart: false, sound: true,
+};
+
+// ---------- утилиты ----------
+const $ = (s) => document.querySelector(s);
+const pad = (n) => String(n).padStart(2, '0');
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+const fmtClock = (ms) => {
+  const t = Math.max(0, Math.ceil(ms / 1000));
+  return `${pad(Math.floor(t / 60))}:${pad(t % 60)}`;
+};
+const fmtDur = (min) => {
+  const m = Math.round(min);
+  return m >= 60 ? `${Math.floor(m / 60)} ч ${m % 60} м` : `${m} м`;
+};
+const dayKey = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const keyToDate = (k) => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+const shiftKey = (k, n) => { const d = keyToDate(k); d.setDate(d.getDate() + n); return dayKey(d); };
+const minutesOfDay = (ts, base) => (ts - base) / MIN;
+
+const ruDay = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', weekday: 'short' });
+const ruTime = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' });
+const ruWeekday = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' });
+
+// ---------- состояние ----------
+let settings = { ...DEFAULTS };
+let days = {};                 // { '2026-11-13': { sessions: [...] } }
+let selectedDay = dayKey();
+let tickId = null;
+let saveTimer = null;
+
+let timer = {
+  mode: 'focus',
+  running: false,
+  durationMs: DEFAULTS.focus * MIN,
+  remainingMs: DEFAULTS.focus * MIN,
+  endsAt: null,          // timestamp финиша (когда running)
+  startedAt: null,       // первый старт сессии
+  elapsedMs: 0,          // накопленное время в работе
+  segmentStart: null,    // старт текущего отрезка
+};
+
+// ---------- хранилище ----------
+function persist() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      v: 3, settings, days,
+      timer: {
+        ...timer,
+        remainingMs: remainingNow(),
+        elapsedMs: elapsedNow(),
+      },
+    }));
+  } catch (e) {
+    console.warn('Не удалось сохранить состояние', e);
+  }
+}
+const persistLazy = () => {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(persist, 400);
+};
+
+function load() {
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch { /* ignore */ }
+
+  if (raw?.v === 3) {
+    settings = { ...DEFAULTS, ...raw.settings };
+    days = raw.days || {};
+    if (raw.timer) timer = { ...timer, ...raw.timer };
+  } else {
+    migrateLegacy();
+  }
+
+  prune();
+
+  // восстановление таймера после перезагрузки
+  if (timer.running && timer.endsAt) {
+    const left = timer.endsAt - Date.now();
+    if (left > 0) {
+      timer.remainingMs = left;
+      timer.segmentStart = Date.now();
+      // elapsed уже накоплен до перезагрузки — корректируем сегмент
+      timer.elapsedMs = Math.max(0, timer.durationMs - left - 0);
+      timer.segmentStart = Date.now() - 0;
+      timer.elapsedMs = Math.max(0, timer.durationMs - left);
+      timer.segmentStart = Date.now();
+      timer.elapsedMs = 0; // считаем от durationMs - remaining, см. elapsedNow
+    } else {
+      finishSession(timer.endsAt, true);
+      nextMode(false);
+    }
+  } else {
+    timer.running = false;
+    timer.remainingMs = clamp(timer.remainingMs ?? durationFor(timer.mode), 0, durationFor(timer.mode));
+  }
+}
+
+// перенос данных старой версии (pomodoro-settings / pomodoro-sessions)
+function migrateLegacy() {
+  try {
+    const s = JSON.parse(localStorage.getItem('pomodoro-settings') || 'null');
+    if (s) settings = { ...DEFAULTS, ...s };
+    const sessions = JSON.parse(localStorage.getItem('pomodoro-sessions') || '[]');
+    sessions.forEach((it) => {
+      const end = new Date(it.completedAt).getTime();
+      const minutes = Number(it.duration) || 0;
+      if (!end || !minutes) return;
+      addSession({
+        id: String(it.id || end),
+        mode: it.mode in MODES ? it.mode : 'focus',
+        start: end - minutes * MIN,
+        end, minutes, planned: minutes, completed: true,
+      });
+    });
+    timer.durationMs = timer.remainingMs = durationFor('focus');
+  } catch { /* ignore */ }
+}
+
+function prune() {
+  const limit = shiftKey(dayKey(), -KEEP_DAYS);
+  Object.keys(days).forEach((k) => { if (k < limit) delete days[k]; });
+}
+
+function getDay(key = selectedDay) {
+  return days[key] || { sessions: [] };
+}
+
+function addSession(s) {
+  const key = dayKey(new Date(s.start));
+  (days[key] ||= { sessions: [] }).sessions.push(s);
+  days[key].sessions.sort((a, b) => a.start - b.start);
+}
+
+// ---------- расчёты времени ----------
+const durationFor = (mode) => (settings[mode] || DEFAULTS[mode]) * MIN;
+const remainingNow = () =>
+  timer.running && timer.endsAt ? Math.max(0, timer.endsAt - Date.now()) : timer.remainingMs;
+const elapsedNow = () => clamp(timer.durationMs - remainingNow(), 0, timer.durationMs);
+
+// ---------- статистика ----------
+function statsFor(key) {
+  const list = getDay(key).sessions;
+  const focus = list.filter((s) => s.mode === 'focus');
+  return {
+    pomodoros: focus.filter((s) => s.completed).length,
+    focusMin: focus.reduce((a, s) => a + s.minutes, 0),
+    breakMin: list.filter((s) => s.mode !== 'focus').reduce((a, s) => a + s.minutes, 0),
+    count: list.length,
+  };
+}
+
+function streak() {
+  let n = 0;
+  let k = dayKey();
+  if (!statsFor(k).pomodoros) k = shiftKey(k, -1);
+  while (statsFor(k).pomodoros > 0) { n++; k = shiftKey(k, -1); }
+  return n;
+}
+
+// ---------- управление таймерером ----------
+function start() {
+  if (timer.running) return;
+  const now = Date.now();
+  if (!timer.startedAt) {
+    timer.startedAt = now;
+    timer.durationMs = durationFor(timer.mode);
+    if (timer.remainingMs <= 0) timer.remainingMs = timer.durationMs;
+  }
+  timer.endsAt = now + timer.remainingMs;
+  timer.running = true;
+  tickId = setInterval(tick, 250);
+  renderTimer();
+  persist();
+}
+
+function pause() {
+  if (!timer.running) return;
+  timer.remainingMs = remainingNow();
+  timer.running = false;
+  timer.endsAt = null;
+  clearInterval(tickId); tickId = null;
+  renderTimer();
+  persist();
+}
+
+const toggle = () => (timer.running ? pause() : start());
+
+function reset() {
+  dropPartial();
+  hardReset(timer.mode);
+}
+
+function hardReset(mode) {
+  clearInterval(tickId); tickId = null;
+  timer = {
+    mode,
+    running: false,
+    durationMs: durationFor(mode),
+    remainingMs: durationFor(mode),
+    endsAt: null, startedAt: null, elapsedMs: 0, segmentStart: null,
+  };
+  renderAll();
+  persist();
+}
+
+// прерванная сессия: пишем в историю, если отработано ≥ 1 минуты
+function dropPartial() {
+  const worked = elapsedNow();
+  if (timer.startedAt && worked >= MIN) {
+    addSession({
+      id: `${timer.startedAt}-${Math.random().toString(36).slice(2, 7)}`,
+      mode: timer.mode,
+      start: timer.startedAt,
+      end: Date.now(),
+      minutes: Math.round(worked / MIN),
+      planned: Math.round(timer.durationMs / MIN),
+      completed: false,
+    });
+    renderDaySections();
+  }
+}
+
+function tick() {
+  if (remainingNow() <= 0) {
+    finishSession(timer.endsAt || Date.now(), true);
+    nextMode(settings.autoStart);
+    return;
+  }
+  renderTimer();
+  if (selectedDay === dayKey()) renderNowMarker();
+  persistLazy();
+}
+
+function finishSession(endTs, completed) {
+  const start = timer.startedAt ?? endTs - timer.durationMs;
+  addSession({
+    id: `${start}-${Math.random().toString(36).slice(2, 7)}`,
+    mode: timer.mode,
+    start,
+    end: endTs,
+    minutes: Math.round((endTs - start) / MIN) || Math.round(timer.durationMs / MIN),
+    planned: Math.round(timer.durationMs / MIN),
+    completed,
+  });
+  if (settings.sound) beep(timer.mode);
+  clearInterval(tickId); tickId = null;
+  timer.running = false;
+  renderDaySections();
+  persist();
+}
+
+function nextMode(autoStart) {
+  let next = 'focus';
+  if (timer.mode === 'focus') {
+    const done = statsFor(dayKey()).pomodoros;
+    next = done > 0 && done % settings.longEvery === 0 ? 'longBreak' : 'shortBreak';
+  }
+  hardReset(next);
+  if (autoStart) start();
+}
+
+function skip() {
+  dropPartial();
+  nextMode(false);
+}
+
+function switchMode(mode) {
+  if (mode === timer.mode && !timer.startedAt) return;
+  dropPartial();
+  hardReset(mode);
+}
+
+// ---------- звук ----------
+let audioCtx = null;
+function beep(mode) {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    audioCtx ||= new Ctx();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = mode === 'focus' ? 880 : 620;
+    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.6);
+  } catch { /* без звука */ }
+}
+
+// ---------- рендер: таймер ----------
+function renderTimer() {
+  const left = remainingNow();
+  const p = timer.durationMs ? 1 - left / timer.durationMs : 0;
+
+  $('#time').value = fmtClock(left);
+  $('#dial').style.setProperty('--p', p.toFixed(4));
+  $('#mode-label').textContent = MODES[timer.mode].label;
+  $('#app').dataset.mode = timer.mode;
+
+  const done = statsFor(dayKey()).pomodoros;
+  $('#cycle-info').textContent = timer.mode === 'focus'
+    ? `Помодоро ${done % settings.longEvery + 1} из ${settings.longEvery}`
+    : `Готово за день: ${done}`;
+
+  $('#icon-play').hidden = timer.running;
+  $('#icon-pause').hidden = !timer.running;
+  $('#btn-toggle').ariaLabel = timer.running ? 'Пауза' : 'Старт';
+
+  document.querySelectorAll('.modes__btn').forEach((b) =>
+    b.setAttribute('aria-selected', String(b.dataset.mode === timer.mode)));
+
+  document.title = `${MODES[timer.mode].emoji} ${fmtClock(left)} — Pomodoro`;
+}
+
+// ---------- рендер: день (метрики, линия, список) ----------
+function renderDaySections() {
+  renderStats();
+  renderTimeline();
+  renderSessions();
+  renderWeek();
+}
+
+function renderStats() {
+  const s = statsFor(selectedDay);
+  const isToday = selectedDay === dayKey();
+  $('#stats-date').textContent = isToday ? 'сегодня' : ruDay.format(keyToDate(selectedDay));
+  $('#m-pomodoros').textContent = s.pomodoros;
+  $('#m-focus').textContent = fmtDur(s.focusMin);
+  $('#m-break').textContent = fmtDur(s.breakMin);
+  $('#m-streak').textContent = streak();
+  $('#goal-text').textContent = `${s.pomodoros} / ${settings.goal}`;
+  $('#goal-fill').style.setProperty('--w', `${Math.min(100, (s.pomodoros / settings.goal) * 100)}%`);
+  $('#day-picker').value = selectedDay;
+  $('#day-next').disabled = selectedDay >= dayKey();
+}
+
+function buildHours() {
+  const box = $('#tl-hours');
+  box.innerHTML = '';
+  for (let h = 0; h < 24; h += 3) {
+    const span = document.createElement('span');
+    span.textContent = `${pad(h)}:00`;
+    box.appendChild(span);
+  }
+}
+
+function renderTimeline() {
+  const track = $('#tl-track');
+  track.querySelectorAll('.tl__block').forEach((el) => el.remove());
+
+  const base = keyToDate(selectedDay).getTime();
+  const list = getDay(selectedDay).sessions;
+
+  list.forEach((s) => {
+    const from = clamp(minutesOfDay(s.start, base), 0, 1440);
+    const to = clamp(minutesOfDay(s.end, base), from + 0.5, 1440);
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'tl__block';
+    el.dataset.mode = s.mode;
+    el.dataset.lane = s.mode === 'focus' ? 'focus' : 'break';
+    el.dataset.partial = String(!s.completed);
+    el.dataset.id = s.id;
+    el.style.left = `${(from / 1440) * 100}%`;
+    el.style.width = `${((to - from) / 1440) * 100}%`;
+    el.title = `${MODES[s.mode].short} · ${ruTime.format(s.start)}–${ruTime.format(s.end)} · ${s.minutes} м${s.completed ? '' : ' (прервано)'}`;
+    el.addEventListener('click', () => highlight(s.id));
+    track.appendChild(el);
+  });
+
+  $('#tl-empty').hidden = list.length > 0;
+  renderNowMarker();
+}
+
+function renderNowMarker() {
+  const now = $('#tl-now');
+  if (selectedDay !== dayKey()) { now.hidden = true; return; }
+  const d = new Date();
+  const mins = d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+  now.hidden = false;
+  now.style.left = `${(mins / 1440) * 100}%`;
+}
+
+function highlight(id) {
+  document.querySelectorAll('.ses, .tl__block').forEach((el) =>
+    el.classList.toggle('is-active', el.dataset.id === id));
+  document.querySelector(`.ses[data-id="${id}"]`)?.scrollIntoView({ block: 'nearest' });
+}
+
+function renderSessions() {
+  const ul = $('#sessions');
+  ul.innerHTML = '';
+  const list = [...getDay(selectedDay).sessions].reverse();
+
+  list.forEach((s) => {
+    const li = document.createElement('li');
+    li.className = 'ses';
+    li.dataset.id = s.id;
+    li.innerHTML = `
+      <i class="dot dot--${s.completed ? s.mode : 'partial'}"></i>
+      <span class="ses__time">${ruTime.format(s.start)} – ${ruTime.format(s.end)}</span>
+      <span class="ses__mode">${MODES[s.mode].short}</span>
+      <span class="ses__dur">${s.minutes} м</span>
+      <span class="ses__flag">${s.completed ? '' : 'прервано'}</span>
+      <button class="ses__del" type="button" aria-label="Удалить запись">×</button>`;
+    li.querySelector('.ses__del').addEventListener('click', () => removeSession(s.id));
+    li.addEventListener('mouseenter', () => highlight(s.id));
+    ul.appendChild(li);
+  });
+}
+
+function removeSession(id) {
+  const day = days[selectedDay];
+  if (!day) return;
+  day.sessions = day.sessions.filter((s) => s.id !== id);
+  if (!day.sessions.length) delete days[selectedDay];
+  renderDaySections();
+  renderTimer();
+  persist();
+}
+
+// ---------- рендер: неделя ----------
+function renderWeek() {
+  const grid = $('#week-grid');
+  grid.innerHTML = '';
+
+  const d = keyToDate(selectedDay);
+  const offset = (d.getDay() + 6) % 7;      // понедельник — первый
+  const monday = shiftKey(selectedDay, -offset);
+  const keys = Array.from({ length: 7 }, (_, i) => shiftKey(monday, i));
+  const values = keys.map((k) => statsFor(k).focusMin);
+  const max = Math.max(60, ...values);
+  const today = dayKey();
+
+  keys.forEach((k, i) => {
+    const date = keyToDate(k);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'day';
+    btn.setAttribute('aria-current', String(k === selectedDay));
+    btn.disabled = k > today;
+    btn.title = `${ruDay.format(date)} · ${fmtDur(values[i])}`;
+    btn.innerHTML = `
+      <span class="day__bar"><i style="--h:${Math.round((values[i] / max) * 100)}%"></i></span>
+      <span class="day__name">${ruWeekday.format(date)}</span>
+      <span class="day__num">${date.getDate()}</span>`;
+    btn.addEventListener('click', () => selectDay(k));
+    grid.appendChild(btn);
+  });
+
+  $('#week-total').textContent = `${fmtDur(values.reduce((a, b) => a + b, 0))} фокуса`;
+}
+
+function selectDay(key) {
+  selectedDay = key > dayKey() ? dayKey() : key;
+  renderDaySections();
+}
+
+function renderAll() {
+  renderTimer();
+  renderDaySections();
+}
+
+// ---------- настройки ----------
+function openSettings() {
+  const dlg = $('#settings');
+  const form = $('#settings-form');
+  Object.entries(settings).forEach(([k, v]) => {
+    const input = form.elements[k];
+    if (!input) return;
+    if (input.type === 'checkbox') input.checked = Boolean(v);
+    else input.value = v;
+  });
+  dlg.showModal();
+}
+
+function saveSettings(e) {
+  if (e.submitter?.value !== 'save') return;
+  const form = $('#settings-form');
+  const num = (name, min, max, fallback) =>
+    clamp(parseInt(form.elements[name].value, 10) || fallback, min, max);
+
+  settings = {
+    focus: num('focus', 1, 180, DEFAULTS.focus),
+    shortBreak: num('shortBreak', 1, 60, DEFAULTS.shortBreak),
+    longBreak: num('longBreak', 1, 90, DEFAULTS.longBreak),
+    longEvery: num('longEvery', 2, 12, DEFAULTS.longEvery),
+    goal: num('goal', 1, 24, DEFAULTS.goal),
+    autoStart: form.elements.autoStart.checked,
+    sound: form.elements.sound.checked,
+  };
+
+  if (!timer.running) {
+    timer.durationMs = durationFor(timer.mode);
+    if (!timer.startedAt) timer.remainingMs = timer.durationMs;
+  }
+  renderAll();
+  persist();
+}
+
+function exportJson() {
+  const blob = new Blob([JSON.stringify({ v: 3, settings, days }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `pomodoro-${dayKey()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function wipe() {
+  if (!confirm('Удалить всю историю и настройки? Действие необратимо.')) return;
+  days = {};
+  settings = { ...DEFAULTS };
+  try { localStorage.removeItem(STORE_KEY); } catch { /* ignore */ }
+  $('#settings').close();
+  hardReset('focus');
+}
+
+// ---------- события ----------
+function bind() {
+  $('#btn-toggle').addEventListener('click', toggle);
+  $('#btn-reset').addEventListener('click', reset);
+  $('#btn-skip').addEventListener('click', skip);
+  $('#mode-tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.modes__btn');
+    if (btn) switchMode(btn.dataset.mode);
+  });
+
+  $('#btn-settings').addEventListener('click', openSettings);
+  $('#settings-form').addEventListener('submit', saveSettings);
+  $('#btn-export').addEventListener('click', exportJson);
+  $('#btn-wipe').addEventListener('click', wipe);
+
+  $('#day-prev').addEventListener('click', () => selectDay(shiftKey(selectedDay, -1)));
+  $('#day-next').addEventListener('click', () => selectDay(shiftKey(selectedDay, 1)));
+  $('#day-today').addEventListener('click', () => selectDay(dayKey()));
+  $('#day-picker').addEventListener('change', (e) => e.target.value && selectDay(e.target.value));
+  $('#day-clear').addEventListener('click', () => {
+    if (!getDay(selectedDay).sessions.length) return;
+    if (!confirm('Удалить все записи за выбранный день?')) return;
+    delete days[selectedDay];
+    renderDaySections(); renderTimer(); persist();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.matches('input, textarea') || $('#settings').open) return;
+    const k = e.key.toLowerCase();
+    if (e.code === 'Space') { e.preventDefault(); toggle(); }
+    else if (k === 'r' || k === 'к') reset();
+    else if (k === 's' || k === 'ы') skip();
+    else if (k === 't' || k === 'е') selectDay(dayKey());
+  });
+
+  // возврат из фонового таба — пересчёт по реальному времени
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { persist(); return; }
+    if (timer.running && remainingNow() <= 0) {
+      finishSession(timer.endsAt, true);
+      nextMode(settings.autoStart);
+    } else {
+      renderTimer();
+      if (selectedDay === dayKey()) renderNowMarker();
+    }
+  });
+  window.addEventListener('pagehide', persist);
+
+  // смена суток: обнуляем «сегодня» в интерфейсе
+  setInterval(() => {
+    if ($('#day-picker').value && selectedDay !== dayKey()) return;
+    renderNowMarker();
+  }, 30000);
+}
+
+// ---------- экспорт ----------
+export const App = {
+  init() {
+    load();
+    buildHours();
+    bind();
+    renderAll();
+    if (timer.running) tickId = setInterval(tick, 250);
+  },
+};

@@ -1,9 +1,4 @@
 import './index.css';
-import { App } from './app.js';
+import { App } from '../assets/app';
 
-document.addEventListener('DOMContentLoaded', () => {
-  const root = document.getElementById('app');
-  if (root) {
-    App.init(root);
-  }
-});
+App.init();

@@ -1,13 +1,241 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pomodoro — Таймер фокусировки</title>
-    <link rel="stylesheet" href="./assets/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0d1117" />
+    <meta
+      name="description"
+      content="Pomodoro-таймер с временной линией и статистикой по дням. Данные хранятся локально."
+    />
+    <title>Pomodoro — таймер фокусировки</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍅</text></svg>"
+    />
+    <link rel="stylesheet" href="./assets/style.css" />
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="./assets/app.js"></script>
+    <div class="app" id="app" data-mode="focus">
+      <header class="top">
+        <h1 class="top__brand"><span aria-hidden="true">🍅</span> Pomodoro</h1>
+        <p class="top__tagline">Сфокусируйся. Работай. Отдыхай.</p>
+        <button class="btn btn--ghost top__settings" id="btn-settings" type="button">
+          Настройки
+        </button>
+      </header>
+
+      <main class="layout">
+        <!-- ТАЙМЕР -->
+        <section class="panel timer" aria-labelledby="timer-title">
+          <h2 class="sr-only" id="timer-title">Таймер</h2>
+
+          <div class="modes" id="mode-tabs" role="tablist" aria-label="Режим">
+            <button class="modes__btn" role="tab" type="button" data-mode="focus">Фокус</button>
+            <button class="modes__btn" role="tab" type="button" data-mode="shortBreak">
+              Перерыв
+            </button>
+            <button class="modes__btn" role="tab" type="button" data-mode="longBreak">Отдых</button>
+          </div>
+
+          <div class="dial" id="dial" style="--p: 0">
+            <div class="dial__inner">
+              <output class="dial__time" id="time" aria-live="off">25:00</output>
+              <span class="dial__label" id="mode-label" aria-live="polite">Фокусировка</span>
+              <span class="dial__cycle" id="cycle-info">Помодоро 1 из 4</span>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button class="ctrl" id="btn-reset" type="button" title="Сброс (R)" aria-label="Сброс">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              >
+                <path d="M0.6 9v5h5" style="transform: rotate(-12deg)"></path>
+                <path d="M4.6 13a8 8 0 1113.8 5"></path>
+              </svg>
+            </button>
+            <button
+              class="ctrl ctrl--main"
+              id="btn-toggle"
+              type="button"
+              title="Старт/пауза (Пробел)"
+              aria-label="Старт"
+            >
+              <svg id="icon-play" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              <svg
+                id="icon-pause"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                hidden
+              >
+                <path d="M10 9v6m4-6v6" />
+              </svg>
+            </button>
+            <button
+              class="ctrl"
+              id="btn-skip"
+              type="button"
+              title="Пропустить (S)"
+              aria-label="Пропустить"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              >
+                <path d="M6 5l7 7-7 7" />
+                <path d="M14 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          <p class="timer__hint">Пробел — старт/пауза · R — сброс · S — пропустить</p>
+        </section>
+
+        <!-- СТАТИСТИКА ДНЯ -->
+        <section class="panel stats" aria-labelledby="stats-title">
+          <header class="panel__head">
+            <h2 class="panel__title" id="stats-title">Статистика</h2>
+            <span class="panel__note" id="stats-date">сегодня</span>
+          </header>
+
+          <div class="metrics">
+            <div class="metric">
+              <b class="metric__value" id="m-pomodoros">0</b
+              ><span class="metric__label">Помодоро</span>
+            </div>
+            <div class="metric">
+              <b class="metric__value" id="m-focus">0 м</b><span class="metric__label">Фокус</span>
+            </div>
+            <div class="metric">
+              <b class="metric__value" id="m-break">0 м</b><span class="metric__label">Отдых</span>
+            </div>
+            <div class="metric">
+              <b class="metric__value" id="m-streak">0</b
+              ><span class="metric__label">Дней подряд</span>
+            </div>
+          </div>
+
+          <div class="goal">
+            <div class="goal__row"><span>Цель дня</span><span id="goal-text">0 / 8</span></div>
+            <div class="goal__bar"><i id="goal-fill" style="--w: 0%"></i></div>
+          </div>
+        </section>
+
+        <!-- НЕДЕЛЯ -->
+        <section class="panel week" aria-labelledby="week-title">
+          <header class="panel__head">
+            <h2 class="panel__title" id="week-title">Неделя</h2>
+            <span class="panel__note" id="week-total">время фокуса</span>
+          </header>
+          <div class="week__grid" id="week-grid"></div>
+        </section>
+
+        <!-- ВРЕМЕННАЯ ЛИНИЯ -->
+        <section class="panel timeline" aria-labelledby="tl-title">
+          <header class="panel__head">
+            <h2 class="panel__title" id="tl-title">Временная линия</h2>
+            <div class="daynav">
+              <button class="daynav__btn" id="day-prev" type="button" aria-label="Предыдущий день">
+                🠈
+              </button>
+              <input class="daynav__date" id="day-picker" type="date" aria-label="Выбрать день" />
+              <button class="daynav__btn" id="day-next" type="button" aria-label="Следующий день">
+                🠊
+              </button>
+              <button class="btn btn--ghost" id="day-today" type="button">Сегодня</button>
+            </div>
+          </header>
+
+          <div class="tl">
+            <div class="tl__hours" id="tl-hours" aria-hidden="true"></div>
+            <div class="tl__track" id="tl-track">
+              <div class="tl__lines" aria-hidden="true"></div>
+              <div class="tl__now" id="tl-now" hidden></div>
+            </div>
+            <div class="tl__legend">
+              <span><i class="dot dot--focus"></i>Фокус</span>
+              <span><i class="dot dot--shortBreak"></i>Перерыв</span>
+              <span><i class="dot dot--longBreak"></i>Отдых</span>
+              <span><i class="dot dot--partial"></i>Прервано</span>
+              <button class="btn btn--ghost tl__clear" id="day-clear" type="button">
+                Очистить день
+              </button>
+            </div>
+          </div>
+
+          <ul class="sessions" id="sessions"></ul>
+          <p class="empty" id="tl-empty" hidden>
+            За этот день сессий нет. Запусти таймер — запись появится здесь.
+          </p>
+        </section>
+      </main>
+
+      <footer class="foot">
+        Данные хранятся только в этом браузере (localStorage). Каждые 4 помодоро — длительный
+        перерыв.
+      </footer>
+    </div>
+
+    <!-- НАСТРОЙКИ -->
+    <dialog class="modal" id="settings">
+      <form method="dialog" id="settings-form">
+        <h2 class="modal__title">Настройки</h2>
+
+        <div class="fields">
+          <label class="field"
+            ><span>🎯 Фокусировка, мин</span
+            ><input name="focus" type="number" min="1" max="180" required
+          /></label>
+          <label class="field"
+            ><span>☕ Короткий перерыв, мин</span
+            ><input name="shortBreak" type="number" min="1" max="60" required
+          /></label>
+          <label class="field"
+            ><span>🌴 Длительный перерыв, мин</span
+            ><input name="longBreak" type="number" min="1" max="90" required
+          /></label>
+          <label class="field"
+            ><span>Длинный перерыв каждые, помодоро</span
+            ><input name="longEvery" type="number" min="2" max="12" required
+          /></label>
+          <label class="field"
+            ><span>Цель на день, помодоро</span
+            ><input name="goal" type="number" min="1" max="24" required
+          /></label>
+          <label class="check"
+            ><input name="autoStart" type="checkbox" /><span
+              >Автозапуск следующего интервала</span
+            ></label
+          >
+          <label class="check"
+            ><input name="sound" type="checkbox" /><span>Звук по окончании</span></label
+          >
+        </div>
+
+        <div class="modal__actions">
+          <button class="btn btn--ghost" value="cancel" type="submit">Отмена</button>
+          <button class="btn btn--accent" value="save" type="submit">Сохранить</button>
+        </div>
+        <div class="modal__extra">
+          <button class="link" id="btn-export" type="button">Экспорт JSON</button>
+          <button class="link link--danger" id="btn-wipe" type="button">Удалить все данные</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="./src/main.js"></script>
   </body>
 </html>
