@@ -194,7 +194,7 @@ ul { list-style: none; }
   transition: background .18s, transform .12s;
 }
 .ctrl svg { inline-size: 22px; block-size: 22px; }
-.ctrl:hover { background: rgba(255,255,255,.12); }
+.ctrl:hover { box-shadow: none; transition: 0.55s }
 .ctrl:active { transform: scale(.95); }
 .ctrl--main {
   inline-size: 68px; block-size: 68px;
@@ -202,6 +202,7 @@ ul { list-style: none; }
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: #0d1117;
   box-shadow: 0 10px 26px rgba(0,0,0,.35);
+  transition: 0.55s;
 }
 .ctrl--main svg { inline-size: 28px; block-size: 28px; }
 .timer__hint { color: var(--muted); font-size: 12px; text-align: center; }

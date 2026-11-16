@@ -12,5 +12,5 @@
     "noEmit": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["src", "assets/app.js"]
+  "include": ["src", "src/app.js"]
 }
